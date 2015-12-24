@@ -14,7 +14,7 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
 
     @Override
     protected void mutationProcess() {
-
+        // TODO Falta implementar
     }
 
     @Override
@@ -54,7 +54,9 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
                 }
             }
             for (int column = 0; column < 9; column++) {
-                if (evaluados.contains(chromosome.getGens()[(row * 9) + column])) {
+                int celda = chromosome.getGens()[(row * 9) + column];
+                int casoPrueba = casoAProbar[(row * 9) + column];
+                if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
                     res++;
                 } else {
                     evaluados.add(chromosome.getGens()[(row * 9) + column]);
@@ -75,7 +77,9 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
                 }
             }
             for (int row = 0; row < 9; row++) {
-                if (evaluados.contains(chromosome.getGens()[col + (row * 9)])) {
+                int celda = chromosome.getGens()[col + (row * 9)];
+                int casoPrueba = casoAProbar[col + (row * 9)];
+                if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
                     res++;
                 } else {
                     evaluados.add(chromosome.getGens()[col + (row * 9)]);
@@ -101,7 +105,8 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
             for (int col = 0; col < 3; col++) {
                 for (int fila = 0; fila < 3; fila++) {
                     int celda = chromosome.getGens()[(bloque*3) + (col * 9) + fila];
-                    if (evaluados.contains(celda)) {
+                    int casoPrueba = casoAProbar[(bloque*3) + (col * 9) + fila];
+                    if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
                         res++;
                     } else {
                         evaluados.add(celda);
@@ -116,9 +121,55 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
     private long evaluateDiagonal(Integer[] casoAProbar, Chromosome<Integer> chromosome) {
         long res = 0;
 
+        res += evaluaDiagonalDescendente(casoAProbar, chromosome);
+        res += evaluaDiagonalAscendente(casoAProbar, chromosome);
+
+        return res;
+    }
+
+    private long evaluaDiagonalAscendente(Integer[] casoAProbar, Chromosome<Integer> chromosome) {
+        long res = 0;
+
         List<Integer> evaluados = new ArrayList<>();
         for (int i = 0; i < 9; i++) {
-            // TODO
+            int num = (9 * (i + 1)) - i;
+            int casoPrueba = casoAProbar[num];
+            if (casoPrueba != 0) {
+                evaluados.add(casoPrueba);
+            }
+        }
+        for (int i = 0; i < 9; i++) {
+            int num = (9 * (i + 1)) - i;
+            int celda = chromosome.getGens()[num];
+            int casoPrueba = casoAProbar[num];
+            if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
+                res++;
+            } else {
+                evaluados.add(celda);
+            }
+        }
+
+        return res;
+    }
+
+    private long evaluaDiagonalDescendente(Integer[] casoAProbar, Chromosome<Integer> chromosome) {
+        long res = 0;
+
+        List<Integer> evaluados = new ArrayList<>();
+        for (int i = 0; i < 9; i++) {
+            int casoPrueba = casoAProbar[i + (9 * i)];
+            if (casoPrueba != 0) {
+                evaluados.add(casoPrueba);
+            }
+        }
+        for (int i = 0; i < 9; i++) {
+            int celda = chromosome.getGens()[i + (9 * i)];
+            int casoPrueba = casoAProbar[i + (9 * i)];
+            if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
+                res++;
+            } else {
+                evaluados.add(celda);
+            }
         }
 
         return res;
