@@ -1,6 +1,7 @@
 package mx.shell.java.genetics;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class Chromosome<A> implements Comparable<Chromosome<A>> {
 
@@ -33,6 +34,8 @@ public class Chromosome<A> implements Comparable<Chromosome<A>> {
     @Override
     public String toString() {
         StringBuilder string = new StringBuilder();
+
+        string.append(getValue() + ":");
 
         string.append("{");
         for (int i = 0; i < gens.length; i++) {

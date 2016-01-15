@@ -3,6 +3,7 @@ package mx.shell.java.genetics;
 import mx.shell.java.utils.MathUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class GeneticAlgorithm<A> {
@@ -11,12 +12,16 @@ public abstract class GeneticAlgorithm<A> {
     private int numGens;
     private A[] genValues;
     private int numPopulation;
-    public boolean endCriteria = false;
+    public int endCriteria = -1;
+    private int numParts;
+    private int numIteraciones;
 
-    public void setUpGenData(int numGens, A[] genValues, int numPopulation) {
+    public void setUpGenData(int numGens, A[] genValues, int numPopulation, int numParts, int numIteraciones) {
         this.numGens = numGens;
         this.genValues = genValues;
         this.numPopulation = numPopulation;
+        this.numParts = numParts;
+        this.numIteraciones = numIteraciones;
     }
 
     public void inizialitePopulation() {
@@ -30,14 +35,22 @@ public abstract class GeneticAlgorithm<A> {
     }
 
     public A[] evaluate() {
-        A[] res = getInstance(numGens);
+        A[] res = null;
+        int iteration = 0;
+        System.out.println("0 - - - - - - - - 100");
         do {
-            evaluateProcess();
+            if (((double)((double)iteration*100)/(double)numIteraciones)%10 == 0) {
+                System.out.print("XX");
+            }
+            res = evaluateProcess();
             selectionProcess();
+            Collections.sort(getPopulation());
             crossoverProcess();
             mutationProcess();
-        } while (endCriteria == false);
+            iteration++;
+        } while (iteration < numIteraciones && res == null);
 
+        System.out.println("");
         return res;
     }
 
@@ -50,9 +63,11 @@ public abstract class GeneticAlgorithm<A> {
 
     protected abstract A[] getInstance(int numGens);
 
-    protected abstract void evaluateProcess();
+    protected abstract A[] evaluateProcess();
 
     protected abstract void crossoverProcess();
+
+    protected abstract List<Chromosome> apareate(Chromosome father, Chromosome mother, int numParts);
 
     private A[] createChromosome() {
         A[] chromosome = getInstance(numGens);
@@ -72,7 +87,11 @@ public abstract class GeneticAlgorithm<A> {
         this.population = population;
     }
 
+    public int getNumParts() {
+        return numParts;
+    }
 
-
-
+    public void setNumParts(int numParts) {
+        this.numParts = numParts;
+    }
 }

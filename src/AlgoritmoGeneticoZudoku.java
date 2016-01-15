@@ -1,20 +1,37 @@
 import mx.shell.java.genetics.Chromosome;
 import mx.shell.java.genetics.GeneticAlgorithm;
+import mx.shell.java.utils.MathUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
+public class AlgoritmoGeneticoZudoku extends GeneticAlgorithm<Integer> {
 
     private Integer[] casoAProbar;
 
 
-    public AlgoritmoGenerticoZudoku() {
+    public AlgoritmoGeneticoZudoku() {
     }
 
     @Override
     protected void mutationProcess() {
-        // TODO Falta implementar
+        int mutationPorcentage = 3;
+
+        int numChromosomesToEdit = ((mutationPorcentage * getPopulation().size()) / 100);
+        List<Integer> populateToEdit = new ArrayList<>();
+        for (int i = 0; i < numChromosomesToEdit; i++) {
+            int positionToEdit;
+            do {
+                positionToEdit = MathUtils.getRandom(getPopulation().size());
+            } while (populateToEdit.contains(positionToEdit));
+            populateToEdit.add(positionToEdit);
+        }
+
+        for (int i = 0; i < numChromosomesToEdit; i++) {
+            int genPositionToEdit = MathUtils.getRandom(81);
+            getPopulation().get(populateToEdit.get(i)).getGens()[genPositionToEdit] = new Integer(MathUtils.getRandom(10));
+        }
     }
 
     @Override
@@ -23,28 +40,71 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
     }
 
     @Override
-    protected void evaluateProcess() {
-        for (Chromosome<Integer> chromosome : getPopulation()) {
+    protected Integer[] evaluateProcess() {
+        for (Chromosome chromosome : getPopulation()) {
             long value = 0;
             value += evaluateRow(casoAProbar, chromosome);
             value += evaluateColumn(casoAProbar, chromosome);
             value += evaluateBlock(casoAProbar, chromosome);
             value += evaluateDiagonal(casoAProbar, chromosome);
             chromosome.setValue(value);
+            if (value == 0) {
+                return (Integer[]) chromosome.getGens();
+            }
         }
+        return null;
     }
 
     @Override
     protected void crossoverProcess() {
-        List<Chromosome<Integer>> hijos = new ArrayList<>();
+        List<Chromosome> hijos = new ArrayList<>();
         int numPadres = getPopulation().size();
-        for(int i = 0; i < (getPopulation().size() / 2); i += 2) {
-            hijos.add(getPopulation().get(i));
-            hijos.add(getPopulation().get(numPadres - i - 1));
+//        for(int i = 0; i < (numPadres / 2); i++) {
+//            hijos.addAll(apareate(getPopulation().get(i), getPopulation().get((numPadres) - i - 1)));
+//        }
+        for(int i = 0; i < (numPadres); i+=2) {
+            hijos.addAll(apareate(getPopulation().get(i), getPopulation().get(i+1), getNumParts()));
         }
+
+        List<Chromosome> newPopulation = new ArrayList<>();
+        newPopulation.addAll(getPopulation());
+        newPopulation.addAll(hijos);
+
+        setPopulation(newPopulation);
     }
 
-    private long evaluateRow(Integer[] casoAProbar, Chromosome<Integer> chromosome) {
+    @Override
+    protected List<Chromosome> apareate(Chromosome father, Chromosome mother, int numParts) {
+        int chromosomeLenght = father.getGens().length;
+
+        List<Chromosome> listaHijos = new ArrayList<>();
+
+        Integer[] cromosomaPrimerHijo = new Integer[father.getGens().length];
+        Integer[] cromosomaSegundoHijo = new Integer[father.getGens().length];
+
+
+
+        for (int i = 0; i < numParts; i++) {
+            int begin = i * chromosomeLenght / numParts;
+            int end = (i + 1) * chromosomeLenght / numParts;
+            Integer[] partePadre = Arrays.copyOfRange((Integer[]) father.getGens(), begin, end);
+            Integer[] parteMadre = Arrays.copyOfRange((Integer[]) mother.getGens(), begin, end);
+            if (i%2 == 0) {
+                System.arraycopy(partePadre, 0, cromosomaPrimerHijo, begin, partePadre.length);
+                System.arraycopy(parteMadre, 0, cromosomaSegundoHijo, begin, parteMadre.length);
+            } else {
+                System.arraycopy(parteMadre, 0, cromosomaPrimerHijo, begin, parteMadre.length);
+                System.arraycopy(partePadre, 0, cromosomaSegundoHijo, begin, partePadre.length);
+            }
+        }
+
+        listaHijos.add(new Chromosome<>(cromosomaPrimerHijo));
+        listaHijos.add(new Chromosome<>(cromosomaSegundoHijo));
+
+        return listaHijos;
+    }
+
+    private long evaluateRow(Integer[] casoAProbar, Chromosome chromosome) {
         long res = 0;
         for (int row = 0; row < 9; row++) {
             List<Integer> evaluados = new ArrayList<>();
@@ -54,12 +114,12 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
                 }
             }
             for (int column = 0; column < 9; column++) {
-                int celda = chromosome.getGens()[(row * 9) + column];
+                int celda = (int) chromosome.getGens()[(row * 9) + column];
                 int casoPrueba = casoAProbar[(row * 9) + column];
                 if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
-                    res++;
+                    res+=10;
                 } else {
-                    evaluados.add(chromosome.getGens()[(row * 9) + column]);
+                    evaluados.add((Integer) chromosome.getGens()[(row * 9) + column]);
                 }
             }
         }
@@ -80,7 +140,7 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
                 int celda = chromosome.getGens()[col + (row * 9)];
                 int casoPrueba = casoAProbar[col + (row * 9)];
                 if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
-                    res++;
+                    res+=10;
                 } else {
                     evaluados.add(chromosome.getGens()[col + (row * 9)]);
                 }
@@ -107,7 +167,7 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
                     int celda = chromosome.getGens()[(bloque*3) + (col * 9) + fila];
                     int casoPrueba = casoAProbar[(bloque*3) + (col * 9) + fila];
                     if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
-                        res++;
+                        res+=10;
                     } else {
                         evaluados.add(celda);
                     }
@@ -143,7 +203,7 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
             int celda = chromosome.getGens()[num];
             int casoPrueba = casoAProbar[num];
             if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
-                res++;
+                res+=10;
             } else {
                 evaluados.add(celda);
             }
@@ -166,7 +226,7 @@ public class AlgoritmoGenerticoZudoku extends GeneticAlgorithm<Integer> {
             int celda = chromosome.getGens()[i + (9 * i)];
             int casoPrueba = casoAProbar[i + (9 * i)];
             if (evaluados.contains(celda) || (casoPrueba != 0 && casoPrueba != celda)) {
-                res++;
+                res+=10;
             } else {
                 evaluados.add(celda);
             }
